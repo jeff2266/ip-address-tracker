@@ -26,7 +26,7 @@ function validate(input: string) {
 
 function App() {
 	const [track, setTrack] = useState<Track | null>(null)
-	const [isError, setIsError] = useState<Boolean>(false)
+	const [isError, setIsError] = useState<Boolean | null>(false)
 	const input = useRef<HTMLInputElement>(null)
 
 	const onSubmit: FormEventHandler<HTMLFormElement> = async event => {
@@ -35,13 +35,19 @@ function App() {
 			setIsError(true)
 			return
 		}
-		let request = input.current
+
+		let request: string | null
+		let resp: Response | null
+		let body: any
+
+		setIsError(null)
+		request = input.current
 			? `https://geo.ipify.org/api/v2/country?apiKey=${import.meta.env.VITE_IPIFY_KEY}&ipAddress=${
 					input.current.value
 				}`
 			: null
-		let resp = request ? await fetch(request) : null
-		let body = await resp?.json()
+		resp = request ? await fetch(request) : null
+		body = await resp?.json()
 		if (!body) {
 			setIsError(true)
 			return
@@ -83,13 +89,20 @@ function App() {
 					onSubmit={onSubmit}>
 					<input
 						ref={input}
-						className={`grow w-10/12 px-4 py-2 rounded-s-lg border ${
-							isError ? ' border-red-600' : 'border-transparent'
+						className={`grow w-10/12 px-4 py-2 bg-white rounded-s-lg border border-red-600 disabled:text-dark-gray ${
+							isError === true ? 'border-red-600' : 'border-transparent'
 						}`}
+						disabled={isError === null}
 						placeholder="Search for any IP address or domain"
 					/>
-					<button className="shrink-0 rounded-none bg-black hover:bg-dark-gray">
-						<img className="mx-4" src={arrow} alt="arrow" />
+					<button
+						className="shrink-0 rounded-none bg-black hover:bg-dark-gray disabled:bg-dark-gray"
+						disabled={isError === null}>
+						<img
+							className={`mx-4 ${isError === null ? 'animate-[pulse_1s_infinite]' : ''}`}
+							src={arrow}
+							alt="arrow"
+						/>
 					</button>
 				</form>
 				<div className="row-start-3 col-start-2 row-span-2 w-full min-h-max lg:max-w-screen-lg bg-white rounded-lg py-6 shadow-md">
@@ -100,15 +113,15 @@ function App() {
 						</div>
 						<div className="text-center lg:text-left lg:border-r border-dark-gray px-6">
 							<h2 className="text-sm text-dark-gray">LOCATION</h2>
-							<p>{track?.location ?? '-'}</p>
+							<p>{!track?.location || track.location === '' ? '-' : track.location}</p>
 						</div>
 						<div className="text-center lg:text-left lg:border-r border-dark-gray px-6">
 							<h2 className="text-sm text-dark-gray">TIMEZONE</h2>
-							<p>{track?.timezone ?? '-'}</p>
+							<p>{!track?.timezone || track.timezone === '' ? '-' : track.timezone}</p>
 						</div>
 						<div className="text-center lg:text-left px-6">
 							<h2 className="text-sm text-dark-gray">ISP</h2>
-							<p>{track?.isp ?? '-'}</p>
+							<p>{!track?.isp || track.isp === '' ? '-' : track.isp}</p>
 						</div>
 					</div>
 				</div>
