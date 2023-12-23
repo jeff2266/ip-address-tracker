@@ -76,7 +76,7 @@ function App() {
 	return (
 		<>
 			<div className="row-start-1 col-start-1 w-full min-w-max h-full grid grid-rows-[auto_auto_auto_auto_3fr] grid-cols-[0_auto_0] gap-x-4 justify-items-center items-start">
-				<div className="row-start-1 col-start-1 min-w-full h-full row-span-3 col-span-3 bg-[url(pattern-bg-mobile.png)] lg:bg-[url(pattern-bg-desktop.png)] bg-cover"></div>
+				<div className="row-start-1 col-start-1 min-w-full h-full row-span-3 col-span-3 bg-[url(/pattern-bg-mobile.png)] lg:bg-[url(/pattern-bg-desktop.png)] bg-cover"></div>
 				<h1 className="row-start-1 col-start-2 text-2xl text-white mt-4 px-4">IP Address Tracker</h1>
 				<form
 					className="row-start-2 col-start-2 rounded-lg overflow-clip flex w-full lg:max-w-screen-sm shadow-md my-6"
