@@ -1,10 +1,11 @@
 import { FormEventHandler, useRef, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import arrow from './assets/icon-arrow.svg'
+import MapBox from './components/MapBox'
 
 type Track = {
 	ip: string
 	location: string
+	coord: [number, number]
 	timezone: string
 	isp: string
 }
@@ -34,27 +35,41 @@ function App() {
 			setIsError(true)
 			return
 		}
-		const request = input.current
+		let request = input.current
 			? `https://geo.ipify.org/api/v2/country?apiKey=${import.meta.env.VITE_IPIFY_KEY}&ipAddress=${
 					input.current.value
 				}`
 			: null
-		const resp = request ? await fetch(request) : null
-		const body = await resp?.json()
+		let resp = request ? await fetch(request) : null
+		let body = await resp?.json()
 		if (!body) {
 			setIsError(true)
 			return
 		}
-		setTrack(
-			body
-				? {
-						ip: body.ip,
-						location: `${body.location.region}, ${body.location.country}`,
-						timezone: body.location.timezone,
-						isp: body.isp
-					}
-				: null
-		)
+
+		let newTrack = {
+			ip: body.ip as string,
+			location: `${body.location.region}, ${body.location.country}`,
+			timezone: body.location.timezone as string,
+			isp: body.isp as string
+		}
+
+		request = newTrack?.location
+			? encodeURI(
+					`https://api.geoapify.com/v1/geocode/search?text=${newTrack.location}&apiKey=${
+						import.meta.env.VITE_GEOAPIFY_KEY
+					}`
+				)
+			: null
+		resp = request ? await fetch(request) : null
+		body = await resp?.json()
+		if (!body) {
+			setIsError(true)
+			return
+		}
+
+		const properties = (body.features as Array<any>)[0]?.properties
+		setTrack({...newTrack, coord: [properties.lat, properties.lon]})
 		setIsError(false)
 	}
 
@@ -64,11 +79,11 @@ function App() {
 				<div className="row-start-1 col-start-1 min-w-full h-full row-span-3 col-span-3 bg-[url(pattern-bg-mobile.png)] lg:bg-[url(pattern-bg-desktop.png)] bg-cover"></div>
 				<h1 className="row-start-1 col-start-2 text-2xl text-white mt-4 px-4">IP Address Tracker</h1>
 				<form
-					className="row-start-2 col-start-2 rounded-lg overflow-clip flex min-w-full lg:min-w-max shadow-md my-6"
+					className="row-start-2 col-start-2 rounded-lg overflow-clip flex w-full lg:max-w-screen-sm shadow-md my-6"
 					onSubmit={onSubmit}>
 					<input
 						ref={input}
-						className={`grow text-base px-4 py-2 rounded-s-lg border ${
+						className={`grow w-10/12 px-4 py-2 rounded-s-lg border ${
 							isError ? ' border-red-600' : 'border-transparent'
 						}`}
 						placeholder="Search for any IP address or domain"
@@ -97,18 +112,8 @@ function App() {
 						</div>
 					</div>
 				</div>
-				<div className="row-start-4 col-start-1 row-span-2 col-span-3 relative w-full h-96 flex justify-center items-center overflow-clip -z-10">
-					<MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={false}>
-						<TileLayer
-							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-							url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-						/>
-						<Marker position={[51.505, -0.09]}>
-							<Popup>
-								A pretty CSS3 popup. <br /> Easily customizable.
-							</Popup>
-						</Marker>
-					</MapContainer>
+				<div className="row-start-4 col-start-1 row-span-2 col-span-3 relative w-full h-full flex justify-center items-center overflow-clip -z-10">
+					<MapBox coord={track?.coord ?? [51.505, -0.09]} />
 				</div>
 			</div>
 		</>
